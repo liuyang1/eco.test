@@ -1,0 +1,2 @@
+- [人民币美元汇率历史一览表（1949—2010）](https://www.douban.com/group/topic/14371415/)
+- [招商银行2011-2017年](http://fx.cmbchina.com/Hq/History.aspx?nbr=%E7%BE%8E%E5%85%83&startdate=2009-01-01&enddate=2017-06-20&page=47)
