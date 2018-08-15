@@ -26,17 +26,23 @@ import time
 import datetime
 
 
+def isInterest(item):
+    return item[0] == "INTEREST"
+
+
 def loadData(fn):
     def parseLine(l):
         l = l.split()
         if len(l) != 3:
             print 'skip unknown line:', l
             return ()
-        # d = l[0]
-        d = time.strptime(l[0], '%Y%m%d')
-        d = datetime.datetime.fromtimestamp(time.mktime(d))
+        l[0] = l[0].upper()
+        if isInterest(l):
+            d = "INTEREST"
+        else:
+            d = time.strptime(l[0], '%Y%m%d')
+            d = datetime.datetime.fromtimestamp(time.mktime(d))
         pjt = l[1]
-        # num = l[2]
         num = float(l[2])
         return (d, pjt, num)
     lst = []
@@ -52,10 +58,12 @@ def loadData(fn):
 
 def splitAsPjt(dat):
     pjts = set([i[1] for i in dat])
-    dct = {}
+    dct, interests = {}, {}
     for pjt in pjts:
-        dct[pjt] = [i for i in dat if i[1] == pjt]
-    return dct
+        pjtdata = [i for i in dat if i[1] == pjt]
+        dct[pjt] = [i for i in pjtdata if not isInterest(i)]
+        interests[pjt] = sum([i[2] for i in pjtdata if isInterest(i)])
+    return dct, interests
 
 
 today = datetime.datetime.today()  # it return datetime class
@@ -69,7 +77,7 @@ def calc(dat):
     for (d, _, n) in dat:
         s0 += n
         s1 += (today - d).days * n
-    return s0, s1
+    return s0, s1 / 365.
 
 
 if __name__ == "__main__":
@@ -79,12 +87,21 @@ if __name__ == "__main__":
     print "End Day:", today
     lst = loadData(sys.argv[1])
     # print lst
-    dct = splitAsPjt(lst)
-    print '%-20s %10s %20s' % ("PROJECT_NAME", "SUM0/rmb", "SUM1(/rmb*year)")
-    s0, s1 = 0, 0
+    dct, interests = splitAsPjt(lst)
+    title = ("Project", "Sum0(rmb)", "Sum1(rmb*FY)",
+             "Interest(rmb)", "Ratio(%)", "Ratio/FY(%)")
+    print '%-20s %10s %20s %20s %10s %10s' % title
+    s0, s1, s2 = 0, 0, 0
     for pjt, dat in dct.items():
         r = calc(dat)
         s0 += r[0]
         s1 += r[1]
-        print "%-20s %10.2f %20.2f" % (pjt, r[0], r[1]/365.)
-    print "%-20s %10.2f %20.2f" % ('SUM', s0, s1/365.)
+        ints = interests[pjt]
+        s2 += ints
+        if r[0] == 0:
+            ratio0 = float('NaN')
+        else:
+            ratio0 = 100. * ints / r[0]
+        ratio1 = 100. * ints / r[1]
+        print "%-20s %10.2f %20.2f %20.2f %10.2f %10.2f" % (pjt, r[0], r[1], ints, ratio0, ratio1)
+    print "%-20s %10.2f %20.2f %20.2f %10.2f %10.2f" % ('SUM', s0, s1, s2, 100 * s2 / s0, 100 * s2 / s1)
