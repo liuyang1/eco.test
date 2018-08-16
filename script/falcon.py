@@ -1,8 +1,6 @@
 #! -*- encoding: utf8
 
-"""鸢飞戾天者，望峰息心
-
-python falcon.py [ledger file]
+"""python falcon.py [ledger file]
 
 ledger file format:
 
@@ -80,7 +78,17 @@ def calc(dat):
     return s0, s1 / 365.
 
 
+def showRatio(a, b):
+    if b == 0:
+        return 'N/A'
+    elif a == 0:
+        return '0%'
+    else:
+        return "%9.2f%%" % (100. * a / b)
+
+
 if __name__ == "__main__":
+    print "鸢飞戾天者，望峰息心"
     if len(sys.argv) <= 1:
         print __doc__
         sys.exit(-1)
@@ -89,8 +97,9 @@ if __name__ == "__main__":
     # print lst
     dct, interests = splitAsPjt(lst)
     title = ("Project", "Sum0(rmb)", "Sum1(rmb*FY)",
-             "Interest(rmb)", "Ratio(%)", "Ratio/FY(%)")
-    print '%-20s %10s %20s %20s %10s %10s' % title
+             "INT(rmb)", "Ratio", "Ratio/FY")
+    print '%-15s %10s %15s %10s %10s %10s' % title
+    fmt = "%-15s %10.2f %15.2f %10.2f %10s %10s"
     s0, s1, s2 = 0, 0, 0
     for pjt, dat in dct.items():
         r = calc(dat)
@@ -98,10 +107,11 @@ if __name__ == "__main__":
         s1 += r[1]
         ints = interests[pjt]
         s2 += ints
-        if r[0] == 0:
-            ratio0 = float('NaN')
-        else:
-            ratio0 = 100. * ints / r[0]
-        ratio1 = 100. * ints / r[1]
-        print "%-20s %10.2f %20.2f %20.2f %10.2f %10.2f" % (pjt, r[0], r[1], ints, ratio0, ratio1)
-    print "%-20s %10.2f %20.2f %20.2f %10.2f %10.2f" % ('SUM', s0, s1, s2, 100 * s2 / s0, 100 * s2 / s1)
+        r0 = showRatio(ints, r[0])
+        r1 = showRatio(ints, r[1])
+        print fmt % (pjt, r[0], r[1], ints, r0, r1)
+    ints = s2
+    r0 = showRatio(ints, s0)
+    r1 = showRatio(ints, s1)
+    print fmt % ('SUM:', s0, s1, ints, r0, r1)
+    print "%-15s %10.2f" % ("FINAL:", s0 + s2)
