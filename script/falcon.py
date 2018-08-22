@@ -98,10 +98,14 @@ if __name__ == "__main__":
     dct, interests = splitAsPjt(lst)
     title = ("Project", "Sum0(rmb)", "Sum1(rmb*FY)",
              "INT(rmb)", "Ratio", "Ratio/FY")
-    print '%-15s %10s %15s %10s %10s %10s' % title
-    fmt = "%-15s %10.2f %15.2f %10.2f %10s %10s"
+    title_str = '%-20s %10s %15s %10s %10s %10s' % title
+    print title_str
+    bar = "-" * len(title_str)
+    print bar
+    fmt = "%-20s %10.2f %15.2f %10.2f %10s %10s"
     s0, s1, s2 = 0, 0, 0
-    for pjt, dat in dct.items():
+    for pjt in sorted(dct.keys()):
+        dat = dct[pjt]
         r = calc(dat)
         s0 += r[0]
         s1 += r[1]
@@ -113,5 +117,6 @@ if __name__ == "__main__":
     ints = s2
     r0 = showRatio(ints, s0)
     r1 = showRatio(ints, s1)
+    print bar
     print fmt % ('SUM:', s0, s1, ints, r0, r1)
-    print "%-15s %10.2f" % ("FINAL:", s0 + s2)
+    print "%-20s %10.2f" % ("FINAL:", s0 + s2)
