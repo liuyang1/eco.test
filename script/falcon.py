@@ -1,6 +1,6 @@
 #! -*- encoding: utf8
 
-"""python falcon.py [ledger file]
+"""python falcon.py [ledger file] [EndDate]
 
 ledger file format:
 
@@ -28,6 +28,12 @@ def isInterest(item):
     return item[0] == "INTEREST"
 
 
+def str2date(s):
+    d = time.strptime(s, "%Y%m%d")
+    d = datetime.datetime.fromtimestamp(time.mktime(d))
+    return d
+
+
 def loadData(fn):
     def parseLine(l):
         l = l.split()
@@ -35,11 +41,7 @@ def loadData(fn):
             print 'skip unknown line:', l
             return ()
         l[0] = l[0].upper()
-        if isInterest(l):
-            d = "INTEREST"
-        else:
-            d = time.strptime(l[0], '%Y%m%d')
-            d = datetime.datetime.fromtimestamp(time.mktime(d))
+        d = "INTEREST" if isInterest(l) else str2date(l[0])
         pjt = l[1]
         num = float(l[2])
         return (d, pjt, num)
@@ -64,7 +66,7 @@ def splitAsPjt(dat):
     return dct, interests
 
 
-today = datetime.datetime.today()  # it return datetime class
+endDay = datetime.datetime.today()  # it return datetime class
 # today = datetime.datetime.now() # it return datetime class
 # today = time.time() # it return float
 
@@ -74,7 +76,7 @@ def calc(dat):
     s0, s1 = 0, 0
     for (d, _, n) in dat:
         s0 += n
-        s1 += (today - d).days * n
+        s1 += (endDay - d).days * n
     return s0, s1 / 365.
 
 
@@ -92,7 +94,11 @@ if __name__ == "__main__":
     if len(sys.argv) <= 1:
         print __doc__
         sys.exit(-1)
-    print "End Day:", today
+    if len(sys.argv) == 3:
+        endDay = str2date(sys.argv[2])
+        print "End Day:", endDay
+    else:
+        print "Today:", endDay
     lst = loadData(sys.argv[1])
     # print lst
     dct, interests = splitAsPjt(lst)
