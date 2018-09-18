@@ -22,6 +22,7 @@ It will help to calculate interest in investment.
 import sys
 import time
 import datetime
+import decimal
 
 
 def isInterest(item):
@@ -43,7 +44,7 @@ def loadData(fn):
         l[0] = l[0].upper()
         d = "INTEREST" if isInterest(l) else str2date(l[0])
         pjt = l[1]
-        num = float(l[2])
+        num = decimal.Decimal(l[2])
         return (d, pjt, num)
     lst = []
     with open(fn) as f:
@@ -77,7 +78,7 @@ def calc(dat):
     for (d, _, n) in dat:
         s0 += n
         s1 += (endDay - d).days * n
-    return s0, s1 / 365.
+    return s0, s1 / decimal.Decimal(365.)
 
 
 def showRatio(a, b):
@@ -86,7 +87,7 @@ def showRatio(a, b):
     elif a == 0:
         return '0%'
     else:
-        return "%9.2f%%" % (100. * a / b)
+        return "%9.2f%%" % (decimal.Decimal(100.) * a / b)
 
 
 if __name__ == "__main__":
