@@ -7,6 +7,18 @@ ledger file format:
     YYYYMMDD    PROJECT_NAME    [+-]NUMBER
     日期        项目名称        流入流出金额
 
+Recoding interest by this format
+
+    Interest    PROJECT_NAME    [+-]NUMBER
+    利息标记    项目名称        利息
+
+This is sample of ledger file:
+以下是账本文件的样例
+    20180101        ABC             1000
+    20180102        ABC             -1000
+    Interest        ABC             1.0
+    20180201        XYZ             1000
+
 It will show result:
 
     PROJECT_NAME    FINAL_NUMBER    NUMBER*YEAR
