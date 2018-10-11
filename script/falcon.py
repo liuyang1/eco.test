@@ -124,8 +124,12 @@ if __name__ == "__main__":
     fmt = "%-20s %10.2f %15.2f %10.2f %10s %10s"
     s0, s1, s2 = 0, 0, 0
     # for pjt in sorted(dct.keys()):
-    # sorted with SUM, but instead of project's NAME
-    for pjt in sorted(dct.keys(), key=lambda k: -calc(dct[k])[0]):
+    # sorted with (SUM, SUM*dT), but instead of project's NAME
+    def keyFunc(k):
+        r = calc(dct[k])
+        return (-1*r[0],-1*r[1])
+    sorted_key = sorted(dct.keys(), key=keyFunc)
+    for pjt in sorted_key:
         dat = dct[pjt]
         r = calc(dat)
         s0 += r[0]
