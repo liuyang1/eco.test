@@ -24,17 +24,18 @@ It will show result:
     PROJECT_NAME    FINAL_NUMBER    NUMBER*YEAR
     项目名称        当前累计金额    元*年
 
-It will help to calculate interest in investment.
-    ratio = Interest / SUM1
-
-在频繁操作的情况下，这个脚本帮助计算自己的年化收益
-    年化收益 = 收益 / 元年
+It will help to calculate IRR(Internal Rate of Return) in investment.
 """
 
 import sys
 import time
 import datetime
-import decimal
+import scipy.optimize
+
+D365 = 365.
+endDay = datetime.datetime.today()  # it return datetime class
+# today = datetime.datetime.now() # it return datetime class
+# today = time.time() # it return float
 
 
 def isInterest(item):
@@ -56,7 +57,7 @@ def loadData(fn):
         l[0] = l[0].upper()
         d = "INTEREST" if isInterest(l) else str2date(l[0])
         pjt = l[1]
-        num = decimal.Decimal(l[2])
+        num = float(l[2])
         return (d, pjt, num)
     lst = []
     with open(fn) as f:
@@ -69,37 +70,51 @@ def loadData(fn):
     return lst
 
 
+def xnpv(rate, cashflows):
+    t0 = min([d for (d, _) in cashflows])
+    return sum([cf / (1 + rate) ** ((t - t0).days / D365) for (t, cf) in cashflows])
+
+
+def xirr(cashflows):
+    return scipy.optimize.newton(lambda r: xnpv(r, cashflows), 0.0001)
+
+
 def splitAsPjt(dat):
     pjts = set([i[1] for i in dat])
-    dct, interests = {}, {}
+    dct, ints = {}, {}
     for pjt in pjts:
         pjtdata = [i for i in dat if i[1] == pjt]
-        dct[pjt] = [i for i in pjtdata if not isInterest(i)]
-        interests[pjt] = sum([i[2] for i in pjtdata if isInterest(i)])
-    return dct, interests
+        dct[pjt] = [(i[0], i[2]) for i in pjtdata if not isInterest(i)]
+        ints[pjt] = sum([i[2] for i in pjtdata if isInterest(i)])
+    return dct, ints
 
 
-endDay = datetime.datetime.today()  # it return datetime class
-# today = datetime.datetime.now() # it return datetime class
-# today = time.time() # it return float
+def calc(dat, ints):
+    """ only for one project
+        input : [(date, project, number)], ints
+        output : captital, captital * dT, interest, ratio * dT, IRR, cf
+    """
+    s0 = sum([n for (_, n) in dat])
+    s1 = sum([n * (endDay - d).days / D365 for (d, n) in dat])
+    if abs(s0) >= 0.001:
+        te = endDay
+        dat.append((te, -(s0 + ints)))
+    else:
+        te = max([d for (d, _) in dat])
+        dat.append((te, -ints))
+    cf = dat
+    r1 = ints / s1
+    r2 = xirr(cf)
+    return s0, s1, ints, r1, r2, cf
 
 
-def calc(dat):
-    """ only for one project """
-    s0, s1 = 0, 0
-    for (d, _, n) in dat:
-        s0 += n
-        s1 += (endDay - d).days * n
-    return s0, s1 / decimal.Decimal(365.)
-
-
-def showRatio(a, b):
+def showRatio(a, b=1):
     if b == 0:
         return 'N/A'
     elif a == 0:
         return '0%'
     else:
-        return "%9.2f%%" % (decimal.Decimal(100.) * a / b)
+        return "%9.2f%%" % (100 * a / b)
 
 
 if __name__ == "__main__":
@@ -113,35 +128,33 @@ if __name__ == "__main__":
     else:
         print "Today:", endDay
     lst = loadData(sys.argv[1])
-    # print lst
-    dct, interests = splitAsPjt(lst)
     title = ("Project", "Sum0(rmb)", "Sum1(rmb*FY)",
-             "INT(rmb)", "Ratio", "Ratio/FY")
-    title_str = '%-20s %10s %15s %10s %10s %10s' % title
+             "INT(rmb)", "Ratio", "Ratio/FY", "IRR")
+    title_str = '%-20s %10s %15s %10s %10s %10s %10s' % title
     print title_str
     bar = "-" * len(title_str)
     print bar
-    fmt = "%-20s %10.2f %15.2f %10.2f %10s %10s"
-    s0, s1, s2 = 0, 0, 0
-    # for pjt in sorted(dct.keys()):
+    fmt = "%-20s %10.2f %15.2f %10.2f %10s %10s %10s"
+    dct, ints = splitAsPjt(lst)
+    result, sum_cf = [], []
+    sum0, sum1, sum_int = 0, 0, 0
+    for pjt in dct.keys():
+        r = calc(dct[pjt], ints[pjt])
+        s0, s1, s2, r1, r2, cf = r
+        r0 = showRatio(s2, s0)
+        r1 = showRatio(r1)
+        r2 = showRatio(r2)
+        result.append((pjt, s0, s1, s2, r0, r1, r2))
+        sum0 += s0
+        sum1 += s1
+        sum_int += s2
+        sum_cf.extend(cf)
     # sorted with (SUM, SUM*dT), but instead of project's NAME
-    def keyFunc(k):
-        r = calc(dct[k])
-        return (-1*r[0],-1*r[1])
-    sorted_key = sorted(dct.keys(), key=keyFunc)
-    for pjt in sorted_key:
-        dat = dct[pjt]
-        r = calc(dat)
-        s0 += r[0]
-        s1 += r[1]
-        ints = interests[pjt]
-        s2 += ints
-        r0 = showRatio(ints, r[0])
-        r1 = showRatio(ints, r[1])
-        print fmt % (pjt, r[0], r[1], ints, r0, r1)
-    ints = s2
-    r0 = showRatio(ints, s0)
-    r1 = showRatio(ints, s1)
+    for pjt in sorted(result, key=lambda k: (-k[1], -k[2])):
+        print fmt % pjt
+    r0 = showRatio(sum_int, sum0)
+    r1 = showRatio(sum_int, sum1)
+    r2 = showRatio(xirr(sum_cf))
     print bar
-    print fmt % ('SUM:', s0, s1, ints, r0, r1)
-    print "%-20s %10.2f" % ("FINAL:", s0 + s2)
+    print fmt % ('SUM:', sum0, sum1, sum_int, r0, r1, r2)
+    print "%-20s %10.2f" % ("FINAL:", sum0 + sum_int)
