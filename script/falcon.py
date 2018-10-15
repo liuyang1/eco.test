@@ -135,8 +135,8 @@ if __name__ == "__main__":
         print "Today:", endDay
     lst = loadData(sys.argv[1])
     print "Target Rate: %s" % (showRatio(baseRate))
-    title = ("Project", "Sum0($)", "Sum1($*FY)",
-             "Int(rmb)", "Rate", "Rate/FY", "IRR", "LinearR")
+    title = ("Project", "Cap($)", "WCap($*FY)",
+             "Int($)", "HPR", "MDietz", "IRR", "LogMDietz/B")
     title_str = '%-20s %10s %10s %10s %10s %10s %10s %10s' % title
     print title_str
     bar = "-" * len(title_str)
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     for pjt in dct.keys():
         r = calc(dct[pjt], ints[pjt])
         s0, s1, s2, r1, r2, cf = r
-        r3 = linearBaseRate(r2)
+        r3 = linearBaseRate(r1)
         r0 = showRatio(s2, s0)
         r1 = showRatio(r1)
         r2 = showRatio(r2)
@@ -161,9 +161,10 @@ if __name__ == "__main__":
     for pjt in sorted(result, key=lambda k: (-k[1], -k[2])):
         print fmt % pjt
     r0 = showRatio(sum_int, sum0)
-    r1 = showRatio(sum_int, sum1)
+    r1 = sum_int / sum1
     r2 = xirr(sum_cf)
-    r3 = linearBaseRate(r2)
+    r3 = linearBaseRate(r1)
+    r1 = showRatio(r1)
     r2 = showRatio(r2)
     print bar
     print fmt % ('SUM:', sum0, sum1, sum_int, r0, r1, r2, r3)
