@@ -30,6 +30,7 @@ It will help to calculate IRR(Internal Rate of Return) in investment.
 import sys
 import time
 import datetime
+import itertools
 import math
 import scipy.optimize
 
@@ -95,23 +96,20 @@ def splitAsPjt(dat):
     return dct, ints
 
 
-def calc(dat, ints):
+def calc(pjt, cf, ints):
     """ only for one project
         input : [(date, project, number)], ints
         output : captital, captital * dT, interest, ratio * dT, IRR, cf
     """
-    s0 = sum([n for (_, n) in dat])
-    s1 = sum([n * (endDay - d).days / D365 for (d, n) in dat])
+    s0 = sum([n for (_, n) in cf])
+    s1 = sum([n * (endDay - d).days / D365 for (d, n) in cf])
     if abs(s0) >= 0.001:
         te = endDay
-        dat.append((te, -(s0 + ints)))
+        cf.append((te, -(s0 + ints)))
     else:
-        te = max([d for (d, _) in dat])
-        dat.append((te, -ints))
-    cf = dat
-    r1 = ints / s1
-    r2 = xirr(cf)
-    return s0, s1, ints, r1, r2, cf
+        te = max([d for (d, _) in cf])
+        cf.append((te, -ints))
+    return pjt, s0, s1, ints, cf
 
 
 def showRatio(a, b=1):
@@ -123,8 +121,29 @@ def showRatio(a, b=1):
         return "%9.2f%%" % (100 * a / b)
 
 
+def showTitle():
+    title = ("Project", "Cap/$", "WCap/$*FY",
+             "Int/$", "HPR", "MDietz", "IRR", "LogMDietz/B")
+    return '%-20s %10s %10s %10s %10s %10s %10s %10s' % title
+
+
+def showBar(title):
+    return '-' * len(title)
+
+
+def showPjt(pjt):
+    name, s0, s1, ints, cf = pjt
+    r0 = showRatio(ints, s0)
+    r1 = ints / s1
+    r2 = showRatio(xirr(cf))
+    r3 = linearBaseRate(r1)
+    r1 = showRatio(r1)
+    fmt = "%-20s %10.2f %10.2f %10.2f %10s %10s %10s %10.2f"
+    return fmt % (name, s0, s1, ints, r0, r1, r2, r3)
+
+
 if __name__ == "__main__":
-    print "鸢飞戾天者，望峰息心"
+    print "鸢飞戾天者，望峰息心"  # slogan
     if len(sys.argv) <= 1:
         print __doc__
         sys.exit(-1)
@@ -134,38 +153,25 @@ if __name__ == "__main__":
     else:
         print "Today:", endDay
     lst = loadData(sys.argv[1])
-    print "Target Rate: %s" % (showRatio(baseRate))
-    title = ("Project", "Cap($)", "WCap($*FY)",
-             "Int($)", "HPR", "MDietz", "IRR", "LogMDietz/B")
-    title_str = '%-20s %10s %10s %10s %10s %10s %10s %10s' % title
-    print title_str
-    bar = "-" * len(title_str)
-    print bar
-    fmt = "%-20s %10.2f %10.2f %10.2f %10s %10s %10s %10.2f"
     dct, ints = splitAsPjt(lst)
-    result, sum_cf = [], []
-    sum0, sum1, sum_int = 0, 0, 0
+    result = []
     for pjt in dct.keys():
-        r = calc(dct[pjt], ints[pjt])
-        s0, s1, s2, r1, r2, cf = r
-        r3 = linearBaseRate(r1)
-        r0 = showRatio(s2, s0)
-        r1 = showRatio(r1)
-        r2 = showRatio(r2)
-        result.append((pjt, s0, s1, s2, r0, r1, r2, r3))
-        sum0 += s0
-        sum1 += s1
-        sum_int += s2
-        sum_cf.extend(cf)
+        result.append(calc(pjt, dct[pjt], ints[pjt]))
+    ss0 = sum([i[1] for i in result])
+    ss1 = sum([i[2] for i in result])
+    sints = sum([i[3] for i in result])
+    scf = list(itertools.chain(*[i[4] for i in result]))  # concat
+    final = ("ALL", ss0, ss1, sints, scf)
+
+    title = showTitle()
+    bar = showBar(title)
+
+    print "Target Rate: %s" % (showRatio(baseRate))
+    print title
+    print bar
     # sorted with (SUM, SUM*dT), but instead of project's NAME
     for pjt in sorted(result, key=lambda k: (-k[1], -k[2])):
-        print fmt % pjt
-    r0 = showRatio(sum_int, sum0)
-    r1 = sum_int / sum1
-    r2 = xirr(sum_cf)
-    r3 = linearBaseRate(r1)
-    r1 = showRatio(r1)
-    r2 = showRatio(r2)
+        print showPjt(pjt)
     print bar
-    print fmt % ('SUM:', sum0, sum1, sum_int, r0, r1, r2, r3)
-    print "%-20s %10.2f" % ("FINAL:", sum0 + sum_int)
+    print showPjt(final)
+    print "%-20s %10.2f" % ("FINAL", ss0 + sints)
