@@ -39,15 +39,20 @@ def loadReport(fn):
 
 
 def showTitle():
-    fmt = "%-20s %10s %10s %10s %10s"
-    return fmt % ("Project", "WCap/$*FY", "Int/$", "MDietz", "LogMDietz/B")
+    fmt = "%-20s %10s %10s %10s %10s %10s"
+    return fmt % ("Project", "WCap/$*Day", "WCap/$*FY",
+                  "Int/$", "MDietz", "LogMDietz/B")
 
 
-def showPjt(pjt, dwcap, dints):
-    r = dints/dwcap
-    r1 = math.log(1 + r) / math.log(1 + 0.0425)
-    fmt = "%-20s %10.2f %10.2f %10.2f%% %10.2f"
-    return fmt % (pjt, dwcap, dints, 100 * r, r1)
+def showPjt(dday, pjt, dwcap, dints):
+    r = dints / dwcap
+    if r > -1:
+        r1 = math.log(1 + r) / math.log(1 + 0.0425)
+        r1 = "%10.2f" % (r1)
+    else:
+        r1 = "%10s" % ("N/A")
+    fmt = "%-20s %10.2f %10.2f %10.2f %10.2f%% %s"
+    return fmt % (pjt, dwcap * 365 / dday, dwcap, dints, 100 * r, r1)
 
 
 def showBar(title):
@@ -61,6 +66,7 @@ if __name__ == "__main__":
 
     day0, d0 = loadReport(sys.argv[1])
     day1, d1 = loadReport(sys.argv[2])
+    dday = (day1 - day0).days
 
     ret = {}
     for pjt in d1.keys():
@@ -86,6 +92,6 @@ if __name__ == "__main__":
     print title
     print bar
     for pjt in sorted(ret.keys(), key=lambda k: -ret[k][0]):
-        print showPjt(pjt, ret[pjt][0], ret[pjt][1])
+        print showPjt(dday, pjt, ret[pjt][0], ret[pjt][1])
     print bar
-    print showPjt("ALL", swcap, sints)
+    print showPjt(dday, "ALL", swcap, sints)
