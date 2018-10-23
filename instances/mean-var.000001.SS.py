@@ -15,22 +15,25 @@ data = [(-0.1409, 1.2341, '2018'),
         (-0.0334, 1.3316, '2005'),
         ]
 
+data = [(1 + y, x, year) for (y, x, year) in data]
 xs = [var for (_, var, _) in data]
 ys = [mean for (mean, _, _) in data]
 
 from matplotlib.pyplot import *
+gca().set_xscale('log')
+gca().set_yscale('log')
 scatter(xs, ys)
 for (y, x, txt) in data:
     # s = "%.2f %.2f %s" % (x, y, txt)
     s = txt
     annotate(s, (x, y))
 grid()
-xlim(0, 3)
-ylim(-0.5, 0.5)
+# xlim(0, 3)
+# ylim(-0.5, 0.5)
 gca().set_aspect('equal', adjustable='box')
 style.use('ggplot')
 # show()
-title("mean-var model for 000001.SS from 2005-2018")
+title("mean-var model for 000001.SS btw 2005-2018")
 xlabel("Var/%")
 ylabel("Mean/%")
 savefig("1.png")
