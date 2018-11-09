@@ -36,7 +36,7 @@ import scipy.optimize
 
 D365 = 365.
 endDay = datetime.datetime.today()  # it return datetime class
-baseRate = 0.0425
+baseRate = 0.0427
 # today = datetime.datetime.now() # it return datetime class
 # today = time.time() # it return float
 
@@ -134,12 +134,16 @@ def showBar(title):
 def showPjt(pjt):
     name, s0, s1, ints, cf = pjt
     r0 = showRatio(ints, s0)
-    r1 = ints / s1
     r2 = showRatio(xirr(cf))
-    r3 = linearBaseRate(r1)
-    r1 = showRatio(r1)
-    fmt = "%-20s %10.2f %10.2f %10.2f %10s %10s %10s %10.2f"
-    return fmt % (name, s0, s1, ints, r0, r1, r2, r3)
+    if s1 != 0:
+        r1 = ints / s1
+        r3 = linearBaseRate(r1)
+        r1 = showRatio(r1)
+        fmt = "%-20s %10.2f %10.2f %10.2f %10s %10s %10s %10.2f"
+        return fmt % (name, s0, s1, ints, r0, r1, r2, r3)
+    else:
+        fmt = "%-20s %10.2f %10.2f %10.2f %10s %10s %10s %10s"
+        return fmt % (name, s0, s1, ints, r0, "N/A", "N/A", "N/A")
 
 
 if __name__ == "__main__":

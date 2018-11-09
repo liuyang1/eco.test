@@ -47,7 +47,7 @@ def showTitle():
 def showPjt(dday, pjt, dwcap, dints):
     r = dints / dwcap
     if r > -1:
-        r1 = math.log(1 + r) / math.log(1 + 0.0425)
+        r1 = math.log(1 + r) / math.log(1 + 0.0427)
         r1 = "%10.2f" % (r1)
     else:
         r1 = "%10s" % ("N/A")
