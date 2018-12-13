@@ -1,4 +1,16 @@
-- 000001.SS.csv
+# How to get fund history data from easymoney.com
+
+http://fund.eastmoney.com/pingzhongdata/162415.js?v=20160518155842
+
+# tushare
+
+http://tushare.org/index.html
+
+Python API to get economics / finance data.
+
+>>> This one is good.
+
+# 000001.SS.csv
 
 上证指数历史数据
 start 1990-12-19, to 2018-10-19
