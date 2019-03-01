@@ -4,6 +4,7 @@ import datetime
 import functools
 import operator
 import math
+import sys
 
 
 def str2date(s):
@@ -13,11 +14,13 @@ def str2date(s):
 
 
 def loadData():
-    with open('../data/000001.SS.csv', 'rb') as csvfile:
-        rd = csv.reader(csvfile, delimiter=',', quotechar='|')
+    with open('../data/040040_20171024_20181024.txt', 'rb') as fp:
+        # rd = csv.reader(csvfile, delimiter=',', quotechar='|')
+        rd = fp.read().split('\n')[1:]
         lst = []
         for row in rd:
-            day, adjClose, vol = row[0], row[5], row[6]
+            row = row.split()
+            day, adjClose, vol = row[0], row[4], row[6]
             try:
                 lst.append((str2date(day), float(adjClose), float(vol)))
             except:
@@ -25,16 +28,15 @@ def loadData():
         return lst
 
 
-year = 2018
-begin = str2date("%d-01-01" % (year))
-end = str2date("%d-01-01" % (year + 1))
 lst = loadData()
-lst = [p for (d, p, v) in lst if d >= begin and d <= end]
-# print lst
+# print lst[0:10]
+lst = [i for (_, i, _) in lst]
+lst = list(reversed(lst))
+# sys.exit()
 
 l = len(lst)
 rate = lst[-1] / lst[0]
-# print rate
+print rate
 mean = rate ** (1./l)
 
 
@@ -51,12 +53,18 @@ def var(xs, mean):
     return math.sqrt(t) / (len(xs) - 1)
 
 
-m0 = 0.0000810
 print "period:", l
 print "mean: %.4f%%" %( (mean - 1) * 100)
 v = var(ds, mean)
 print "var:  %.4f%%" %( v * 100)
-print "ratio: %.4f%%" % ((mean - 1) / v)
-print "sharpe: %.4f%%" % ((mean - 1 - m0) / v)
-print "range: %.6f %.6f" % ( mean - v, mean + v)
-print "range/FY: %.6f %.6f" % ((mean - v) ** l, (mean + v) ** l)
+print "range:", mean - v, mean + v
+
+m0 = 0.0000810
+
+print 'sharpe ratio:', (mean - 1 - m0) / v
+
+# poerid: 246/FY
+# mean: 0.0147%
+# var:  0.0088%
+# range: 1.000059 1.00023
+# range/FY: 1.021768, 1.055116 1.087564

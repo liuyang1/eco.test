@@ -15,9 +15,17 @@ data = [(-0.1409, 1.2341, '2018'),
         (-0.0334, 1.3316, '2005'),
         ]
 
-data = [(1 + y, x, year) for (y, x, year) in data]
+m0 = 0.0000810
+# data = [(1 + y, x, year) for (y, x, year) in data]
+for (r, year) in  [((mean - m0) / var, year) for (mean, var, year) in data]:
+    if r > 0.048:
+        print "GOOD: ", r, year
+    else:
+        print "BAD : ", r, year
+sys.exit()
 xs = [var for (_, var, _) in data]
 ys = [mean for (mean, _, _) in data]
+
 
 from matplotlib.pyplot import *
 gca().set_xscale('log')
