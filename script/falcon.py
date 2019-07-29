@@ -1,3 +1,4 @@
+#! /usr/bin/env python2
 #! -*- encoding: utf8
 
 """python falcon.py [ledger file] [EndDate]
@@ -123,8 +124,8 @@ def showRatio(a, b=1):
 
 def showTitle():
     title = ("Project", "Cap/$", "WCap/$*FY",
-             "Int/$", "HPR", "MDietz", "IRR", "LogMDietz/B")
-    return '%-20s %10s %10s %10s %10s %10s %10s %10s' % title
+             "Int/$", "PV/$", "HPR", "MDietz", "IRR", "LogMDietz/B")
+    return '%-20s %10s %10s %10s %10s %10s %10s %10s %10s' % title
 
 
 def showBar(title):
@@ -139,11 +140,11 @@ def showPjt(pjt):
         r1 = ints / s1
         r3 = linearBaseRate(r1)
         r1 = showRatio(r1)
-        fmt = "%-20s %10.2f %10.2f %10.2f %10s %10s %10s %10.2f"
-        return fmt % (name, s0, s1, ints, r0, r1, r2, r3)
+        fmt = "%-20s %10.2f %10.2f %10.2f %10.2f %10s %10s %10s %10.2f"
+        return fmt % (name, s0, s1, ints, s0 + ints, r0, r1, r2, r3)
     else:
-        fmt = "%-20s %10.2f %10.2f %10.2f %10s %10s %10s %10s"
-        return fmt % (name, s0, s1, ints, r0, "N/A", "N/A", "N/A")
+        fmt = "%-20s %10.2f %10.2f %10.2f %10.2f %10s %10s %10s %10s"
+        return fmt % (name, s0, s1, ints, s0 + ints, r0, "N/A", "N/A", "N/A")
 
 
 if __name__ == "__main__":
