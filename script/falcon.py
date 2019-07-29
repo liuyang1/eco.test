@@ -1,7 +1,7 @@
 #! /usr/bin/env python2
 #! -*- encoding: utf8
 
-"""python falcon.py [ledger file] [EndDate]
+"""python falcon.py [-s] [ledger file] [EndDate]
 
 ledger file format:
 
@@ -26,9 +26,12 @@ It will show result:
     项目名称        当前累计金额    元*年
 
 It will help to calculate IRR(Internal Rate of Return) in investment.
+
+    -s      simple mode, only list summary of principle and interest.
 """
 
 import sys
+import getopt
 import time
 import datetime
 import itertools
@@ -147,17 +150,32 @@ def showPjt(pjt):
         return fmt % (name, s0, s1, ints, s0 + ints, r0, "N/A", "N/A", "N/A")
 
 
+def simpleCalc(pjt, cf, ints):
+    s0 = sum([n for (_, n) in cf])
+    s1 = ints
+    return pjt, s0, s1
+
+
 if __name__ == "__main__":
     print "鸢飞戾天者，望峰息心"  # slogan
-    if len(sys.argv) <= 1:
+    args = sys.argv
+    if len(args) <= 0:
         print __doc__
         sys.exit(-1)
-    if len(sys.argv) == 3:
-        endDay = str2date(sys.argv[2])
+    if args[1] == '-s':
+        simplemode = True
+        args = args[2:]
+    else:
+        simplemode = False
+        args = args[1:]
+    fn = args[0]
+    if len(args) == 2:
+        endDay = str2date(args[1])
         print "End Day:", endDay
     else:
         print "Today:", endDay
-    lst = loadData(sys.argv[1])
+    # print simplemode, fn, endDay
+    lst = loadData(fn)
     dct, ints = splitAsPjt(lst)
     result = []
     for pjt in dct.keys():
